@@ -1,5 +1,7 @@
 from .pixoo import (  # noqa
-    PixooConnection,
+    PixooDisplay,
+    build_brightness_packets,
     build_image_packets,
+    set_brightness,
     send_rgb_matrix,
 )

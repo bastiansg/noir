@@ -1,16 +1,15 @@
-import time
-
 from rich.panel import Panel
 from rich.console import Console
 
 from serial import SerialException
 from subprocess import CalledProcessError
 
-from noir.display.pixoo import PixooConnection
+from noir.display.pixoo import PixooDisplay
 from noir.scripts.pixoo.images import dsp_images
 
 
 console = Console()
+BRIGHTNESS_LEVELS = (10, 25, 50, 100)
 
 
 def _color_to_rgb(color):
@@ -33,21 +32,23 @@ def _to_rgb_matrix(dsp_image):
 
 def main() -> None:
     try:
-        with PixooConnection() as pixoo:
-            for index, dsp_image in enumerate(
-                dsp_images,
+        with PixooDisplay() as pixoo:
+            for index, (dsp_image, brightness) in enumerate(
+                zip(dsp_images, BRIGHTNESS_LEVELS),
                 start=1,
             ):
                 pixoo.send_rgb_matrix(_to_rgb_matrix(dsp_image))
+                pixoo.set_brightness(brightness)
                 console.print(
                     Panel(
-                        f"sent {dsp_image['name']} ({index}/{len(dsp_images)})",
+                        (
+                            f"sent {dsp_image['name']} "
+                            f"at {brightness}% ({index}/{len(dsp_images)})"
+                        ),
                         title="Pixoo Space Invaders",
                         border_style="green",
                     )
                 )
-
-                time.sleep(1)
 
     except (CalledProcessError, SerialException, FileNotFoundError) as exc:
         console.print(

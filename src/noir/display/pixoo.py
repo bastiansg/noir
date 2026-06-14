@@ -18,7 +18,7 @@ RGBValue: TypeAlias = Sequence[int]
 RGBMatrix: TypeAlias = Sequence[Sequence[RGBValue]]
 
 
-class PixooConnection:
+class PixooDisplay:
     def __init__(self):
         self._serial: serial.Serial | None = None
 
@@ -56,6 +56,10 @@ class PixooConnection:
     def send_rgb_matrix(self, matrix: RGBMatrix) -> None:
         self.write_packets(build_image_packets(matrix))
 
+    def set_brightness(self, brightness: int) -> None:
+        self.write_packets(build_brightness_packets(brightness))
+        time.sleep(1)
+
     def write_packets(self, packets: list[bytes]) -> None:
         if self._serial is None:
             raise RuntimeError("Pixoo serial connection is not open.")
@@ -71,7 +75,7 @@ class PixooConnection:
         self._serial.close()
         self._serial = None
 
-    def __enter__(self) -> "PixooConnection":
+    def __enter__(self) -> "PixooDisplay":
         self.connect()
         return self
 
@@ -95,9 +99,42 @@ def build_image_packets(matrix: RGBMatrix) -> list[bytes]:
     ]
 
 
+def build_brightness_packets(brightness: int) -> list[bytes]:
+    if brightness < 0 or brightness > 100:
+        raise ValueError("Expected brightness between 0 and 100.")
+
+    return [_build_command_packet(command=0x74, arguments=[brightness])]
+
+
 def send_rgb_matrix(matrix: RGBMatrix) -> None:
-    with PixooConnection() as pixoo:
+    with PixooDisplay() as pixoo:
         pixoo.send_rgb_matrix(matrix)
+
+
+def set_brightness(brightness: int) -> None:
+    with PixooDisplay() as pixoo:
+        pixoo.set_brightness(brightness)
+
+
+def _build_command_packet(command: int, arguments: Sequence[int]) -> bytes:
+    payload_size = len(arguments) + 3
+    frame = [
+        0x01,
+        payload_size & 0xFF,
+        payload_size >> 8 & 0xFF,
+        command & 0xFF,
+        *(argument & 0xFF for argument in arguments),
+    ]
+    checksum = sum(frame[1:]) & 0xFFFF
+
+    return bytes(
+        [
+            *frame,
+            checksum & 0xFF,
+            checksum >> 8 & 0xFF,
+            0x02,
+        ]
+    )
 
 
 def _build_image_payload(matrix: RGBMatrix) -> str:
