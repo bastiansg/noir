@@ -1,0 +1,28 @@
+services:
+    noire-core:
+        image: noire-core
+        container_name: noire-core
+        build:
+            context: .
+            dockerfile: ./docker/core/Dockerfile
+        volumes:
+            - $PWD/resources:/resources
+        networks:
+            - noire
+
+    noire-app:
+        image: noire-app
+        container_name: noire-app
+        build:
+            context: .
+            dockerfile: ./docker/app/Dockerfile
+        volumes:
+            - $PWD/resources:/resources
+        restart: unless-stopped
+        networks:
+            - noire
+
+networks:
+    noire:
+        name: noire
+        driver: bridge

@@ -1,0 +1,19 @@
+services:
+    noire-devcontainer:
+        image: noire-devcontainer
+        container_name: noire-devcontainer
+        build:
+            context: ..
+            dockerfile: .devcontainer/Dockerfile
+        volumes:
+            - ..:/workspace:cached
+            - ../resources/:/resources
+        # This keeps the devcontainer running.
+        entrypoint: ["tail", "-f", "/dev/null"]
+        networks:
+            - noire
+
+networks:
+    noire:
+        name: noire
+        driver: bridge

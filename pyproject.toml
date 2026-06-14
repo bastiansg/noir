@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.14"
+name = "noire"
+dynamic = ["version", "dependencies"]
+description = "Noise of Inconsistent Robot"
+readme = "README.md"
+authors = [{ name = "Bas", email = "bastiansg.bas@gmail.com" }]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["noire*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools_scm]
+fallback_version = "0.0.0"
