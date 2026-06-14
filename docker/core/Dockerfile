@@ -9,6 +9,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
+    bluez \
     git \
     openssh-client \
     python${PYTHON_VERSION} \

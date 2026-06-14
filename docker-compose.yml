@@ -20,11 +20,12 @@ services:
             dockerfile: ./docker/app/Dockerfile
         volumes:
             - $PWD/resources:/resources
+            - /dev:/dev
         env_file:
             - .env
+        privileged: true
+        network_mode: host
         restart: unless-stopped
-        networks:
-            - noir
 
 networks:
     noir:

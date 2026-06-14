@@ -1,4 +1,4 @@
-.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart noir-chat
+.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart noir-chat pixoo-space-invaders
 
 
 core-build:
@@ -27,5 +27,8 @@ app-stop:
 app-restart: app-stop app-up
 
 
+pixoo-display: app-build
+	docker compose run --rm --entrypoint="python -m noir.scripts.pixoo.pixoo_display" noir-app
+
 noir-chat: app-build
-	docker compose run --rm --entrypoint="python -m noir.scripts.chat" noir-app
+	docker compose run --rm --entrypoint="python -m noir.scripts.noir.chat" noir-app
