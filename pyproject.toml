@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 requires-python = ">=3.14"
 name = "noire"
 dynamic = ["version", "dependencies"]
-description = "Noise of Inconsistent Robot"
+description = "Noise Of Inconsistent Robot"
 readme = "README.md"
 authors = [{ name = "Bas", email = "bastiansg.bas@gmail.com" }]
 classifiers = [
@@ -26,3 +26,6 @@ dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools_scm]
 fallback_version = "0.0.0"
+
+[tool.setuptools.package-data]
+"noire" = ["llm_agents/**/*.md"]

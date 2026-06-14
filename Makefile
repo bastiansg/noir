@@ -1,4 +1,4 @@
-.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart
+.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart test-multi-agent
 
 
 core-build:
@@ -25,3 +25,7 @@ app-stop:
 	docker stop noire-app
 
 app-restart: app-stop app-up
+
+
+test-multi-agent: devcontainer-build
+	docker compose -f .devcontainer/docker-compose.yml run --rm --entrypoint="env PYTHONPATH=/workspace/src python -m noire.scripts.chat" noire-devcontainer

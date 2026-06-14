@@ -8,6 +8,8 @@ services:
         volumes:
             - ..:/workspace:cached
             - ../resources/:/resources
+        env_file:
+            - ../.env
         # This keeps the devcontainer running.
         entrypoint: ["tail", "-f", "/dev/null"]
         networks:

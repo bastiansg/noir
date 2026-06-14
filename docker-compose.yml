@@ -7,6 +7,8 @@ services:
             dockerfile: ./docker/core/Dockerfile
         volumes:
             - $PWD/resources:/resources
+        env_file:
+            - .env
         networks:
             - noire
 
@@ -18,6 +20,8 @@ services:
             dockerfile: ./docker/app/Dockerfile
         volumes:
             - $PWD/resources:/resources
+        env_file:
+            - .env
         restart: unless-stopped
         networks:
             - noire
