@@ -1,109 +1,116 @@
-import json
-import os
-import re
+import time
 
-from itertools import chain
-from pathlib import Path
-from typing import Annotated
+from functools import lru_cache
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, PositiveInt, StrictStr
 from pydantic_ai import Tool
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from noir.config import config
+from noir.display.pixoo import RGB, RGBMatrix, PixooDisplay
 
 
-DEFAULT_LED_MATRIX_OUTPUT_PATH = "/tmp/noir-led-matrix.json"
-HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
+LedMatrixColor = Literal["white", "cyan", "yellow", "magenta"]
+LedMatrixPixel = Annotated[int, Field(ge=0, le=1)]
+
+BACKGROUND_COLOR = RGB(red=0, green=0, blue=0)
+LED_MATRIX_COLORS: dict[LedMatrixColor, RGB] = {
+    "white": RGB(red=255, green=255, blue=255),
+    "cyan": RGB(red=0, green=255, blue=255),
+    "yellow": RGB(red=255, green=255, blue=0),
+    "magenta": RGB(red=255, green=0, blue=255),
+}
 
 
-class LedMatrixDisplayResult(BaseModel):
-    matrix_size: PositiveInt
-    image_path: StrictStr
-    description: StrictStr
+class LedMatrixImage(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    color: LedMatrixColor = Field(
+        description="Foreground color for active pixels.",
+    )
+
+    pixels: list[list[LedMatrixPixel]] = Field(
+        description="16x16 binary mask. Use 1 for active pixels and 0 for off pixels.",
+    )
+
+    @field_validator("pixels")
+    @classmethod
+    def validate_dimensions(
+        cls,
+        pixels: list[list[LedMatrixPixel]],
+    ) -> list[list[LedMatrixPixel]]:
+        size = config.pixoo_matrix_size
+        if len(pixels) != size or any(len(row) != size for row in pixels):
+            raise ValueError(f"Expected {size}x{size} image.")
+
+        if not any(pixel for row in pixels for pixel in row):
+            raise ValueError("Expected at least one active pixel.")
+
+        return pixels
 
 
-def _validate_pixels(matrix_size: int, pixels: list[list[str]]) -> None:
-    if len(pixels) != matrix_size:
-        raise ValueError(
-            f"Expected {matrix_size} rows, received {len(pixels)}."
-        )
+@lru_cache()
+def get_display() -> PixooDisplay:
+    display = PixooDisplay()
+    display.connect()
 
-    invalid_rows = [
-        row_index
-        for row_index, row in enumerate(pixels)
-        if len(row) != matrix_size
-    ]
-
-    if invalid_rows:
-        raise ValueError(
-            f"Rows must contain {matrix_size} colors: {invalid_rows}."
-        )
-
-    invalid_colors = [
-        color
-        for color in chain.from_iterable(pixels)
-        if HEX_COLOR_PATTERN.fullmatch(color) is None
-    ]
-
-    if invalid_colors:
-        raise ValueError(f"Invalid RGB hex colors: {invalid_colors}.")
+    return display
 
 
 async def display_led_matrix_image(
-    matrix_size: Annotated[
-        PositiveInt,
-        Field(description="Width and height of the square LED matrix."),
-    ],
-    pixels: Annotated[
-        list[list[str]],
+    images: Annotated[
+        list[LedMatrixImage],
         Field(
-            description=(
-                "Square image as rows of RGB hex colors. The outer list length "
-                "and each row length must match matrix_size."
-            )
+            min_length=1,
+            max_length=5,
+            description="Sequence of 1 to 5 LED matrix images to display.",
         ),
     ],
-    description: Annotated[
-        StrictStr,
-        Field(description="Short description of the image being displayed."),
+    brightness: Annotated[
+        int,
+        Field(
+            ge=25,
+            le=100,
+            description="Display brightness from 25 to 100.",
+        ),
     ],
-) -> LedMatrixDisplayResult:
-    """Display an image in the LED matrix.
+    sleep_seconds: Annotated[
+        float,
+        Field(
+            ge=0.5,
+            le=2.0,
+            description="Seconds to wait between images.",
+        ),
+    ],
+) -> None:
+    """Display a sequence of images in the LED matrix.
 
     Args:
-        matrix_size: Width and height of the square LED matrix.
-        pixels: Square image as rows of RGB hex colors.
-        description: Short description of the image being displayed.
+        images: Sequence of 1 to 5 LED matrix images.
+        brightness: Display brightness from 25 to 100.
+        sleep_seconds: Seconds to wait between images.
     """
 
-    _validate_pixels(matrix_size=matrix_size, pixels=pixels)
+    display = get_display()
+    for image in images:
+        display.send_rgb_matrix(_to_rgb_matrix(image))
+        display.set_brightness(brightness)
+        time.sleep(sleep_seconds)
 
-    image_path = os.getenv(
-        "NOIR_LED_MATRIX_OUTPUT_PATH",
-        DEFAULT_LED_MATRIX_OUTPUT_PATH,
-    )
 
-    Path(image_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(image_path).write_text(
-        json.dumps(
-            {
-                "matrix_size": matrix_size,
-                "pixels": pixels,
-                "description": description,
-            },
-            indent=4,
-        )
-        + "\n"
-    )
+def _to_rgb_matrix(image: LedMatrixImage) -> RGBMatrix:
+    foreground_color = LED_MATRIX_COLORS[image.color]
 
-    return LedMatrixDisplayResult(
-        matrix_size=matrix_size,
-        image_path=image_path,
-        description=description,
+    return RGBMatrix(
+        pixels=[
+            [foreground_color if pixel else BACKGROUND_COLOR for pixel in row]
+            for row in image.pixels
+        ]
     )
 
 
 display_led_matrix_image_tool = Tool(
     function=display_led_matrix_image,
-    description="Display a square RGB image in an n x n LED matrix.",
+    description="Display 1 to 5 colored 16x16 images in the LED matrix.",
     docstring_format="google",
     require_parameter_descriptions=True,
 )

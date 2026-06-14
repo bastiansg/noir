@@ -56,16 +56,9 @@ async def run_chat() -> None:
 
         console.print(
             Panel(
-                state.answer,
+                state.explanation,
                 title="NOIR",
                 border_style="magenta",
-            )
-        )
-        console.print(
-            Panel(
-                state.displayed_image,
-                title="LED Matrix",
-                border_style="green",
             )
         )
 

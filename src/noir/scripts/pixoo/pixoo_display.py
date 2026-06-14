@@ -4,7 +4,7 @@ from rich.console import Console
 from serial import SerialException
 from subprocess import CalledProcessError
 
-from noir.display.pixoo import PixooDisplay
+from noir.display.pixoo import RGB, RGBMatrix, PixooDisplay
 from noir.scripts.pixoo.images import dsp_images
 
 
@@ -13,7 +13,7 @@ BRIGHTNESS_LEVELS = (10, 25, 50, 100)
 
 
 def _color_to_rgb(color):
-    return color["r"], color["g"], color["b"]
+    return RGB(red=color["r"], green=color["g"], blue=color["b"])
 
 
 def _to_rgb_matrix(dsp_image):
@@ -21,13 +21,15 @@ def _to_rgb_matrix(dsp_image):
     background_color = _color_to_rgb(dsp_image["background_color"])
     pixels = dsp_image["image"]
 
-    return [
-        [
-            primary_color if value else background_color
-            for value in pixels[index : index + 16]
+    return RGBMatrix(
+        pixels=[
+            [
+                primary_color if value else background_color
+                for value in pixels[index : index + 16]
+            ]
+            for index in range(0, len(pixels), 16)
         ]
-        for index in range(0, len(pixels), 16)
-    ]
+    )
 
 
 def main() -> None:

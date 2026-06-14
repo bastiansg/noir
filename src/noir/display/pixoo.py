@@ -6,16 +6,39 @@ import subprocess
 from pathlib import Path
 from itertools import chain
 
-from typing import TypeAlias
+from typing import Annotated, TypeAlias
 from types import TracebackType
 from collections.abc import Sequence
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from noir.config import config
 
 
-RGB: TypeAlias = tuple[int, int, int]
-RGBValue: TypeAlias = Sequence[int]
-RGBMatrix: TypeAlias = Sequence[Sequence[RGBValue]]
+RGBChannel: TypeAlias = Annotated[int, Field(ge=0, le=255)]
+
+
+class RGB(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    red: RGBChannel
+    green: RGBChannel
+    blue: RGBChannel
+
+
+class RGBMatrix(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    pixels: list[list[RGB]]
+
+    @field_validator("pixels")
+    @classmethod
+    def validate_dimensions(cls, pixels: list[list[RGB]]) -> list[list[RGB]]:
+        size = config.pixoo_matrix_size
+        if len(pixels) != size or any(len(row) != size for row in pixels):
+            raise ValueError(f"Expected {size}x{size} matrix.")
+
+        return pixels
 
 
 class PixooDisplay:
@@ -158,53 +181,13 @@ def _frame_message(payload: str) -> str:
 
 
 def _index_matrix_colors(matrix: RGBMatrix) -> tuple[list[int], list[RGB]]:
-    normalized_matrix = _normalize_matrix(matrix)
-
-    colors = list(dict.fromkeys(chain.from_iterable(normalized_matrix)))
+    colors = list(dict.fromkeys(chain.from_iterable(matrix.pixels)))
     color_indexes = {color: index for index, color in enumerate(colors)}
     pixels = [
-        color_indexes[color] for color in chain.from_iterable(normalized_matrix)
+        color_indexes[color] for color in chain.from_iterable(matrix.pixels)
     ]
 
     return pixels, colors
-
-
-def _normalize_matrix(matrix: RGBMatrix) -> list[list[RGB]]:
-    if len(matrix) != config.pixoo_matrix_size:
-        raise ValueError(f"Expected {config.pixoo_matrix_size} rows.")
-
-    invalid_rows = [
-        index
-        for index, row in enumerate(matrix)
-        if len(row) != config.pixoo_matrix_size
-    ]
-
-    if invalid_rows:
-        raise ValueError(
-            f"Expected {config.pixoo_matrix_size} columns: {invalid_rows}."
-        )
-
-    normalized_matrix = [
-        [_normalize_color(color) for color in row] for row in matrix
-    ]
-
-    invalid_colors = list(
-        color
-        for color in chain.from_iterable(normalized_matrix)
-        if len(color) != 3
-        or any(channel < 0 or channel > 255 for channel in color)
-    )
-
-    if invalid_colors:
-        raise ValueError(f"Invalid RGB colors: {invalid_colors}.")
-
-    return normalized_matrix
-
-
-def _normalize_color(color: RGBValue) -> RGB:
-    red, green, blue = color
-
-    return red, green, blue
 
 
 def _pack_pixels(pixels: list[int], color_count: int) -> str:
@@ -218,9 +201,7 @@ def _pack_pixels(pixels: list[int], color_count: int) -> str:
 
 
 def _rgb_to_hex(color: RGB) -> str:
-    red, green, blue = color
-
-    return f"{red:02x}{green:02x}{blue:02x}"
+    return f"{color.red:02x}{color.green:02x}{color.blue:02x}"
 
 
 def _checksum(message: str) -> str:

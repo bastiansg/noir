@@ -22,8 +22,7 @@ async def run(state: StateSchema) -> dict[str, Any]:
     )
 
     return {
-        "answer": noir_output.answer,
-        "displayed_image": noir_output.displayed_image,
+        "explanation": noir_output.explanation,
     }
 
 

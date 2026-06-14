@@ -15,13 +15,8 @@ class LedMatrixAssistantDeps(BaseModel):
 
 
 class LedMatrixAssistantOutput(BaseModel):
-    answer: StrictStr = Field(
-        description="Natural language answer for the user.",
-        min_length=1,
-    )
-
-    displayed_image: StrictStr = Field(
-        description="Short description of the image sent to the LED matrix.",
+    explanation: StrictStr = Field(
+        description="Explanation of what the LED matrix image was intended to communicate.",
         min_length=1,
     )
 
