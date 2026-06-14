@@ -3,8 +3,8 @@ from typing import Any
 from multi_agents.graph import Node
 from rich.console import Console
 
-from noire.llm_agents import LedMatrixAssistant, LedMatrixAssistantDeps
-from noire.multi_agent.schema import StateSchema
+from noir.llm_agents import LedMatrixAssistant, LedMatrixAssistantDeps
+from noir.multi_agent.schema import StateSchema
 
 
 console = Console()

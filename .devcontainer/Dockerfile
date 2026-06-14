@@ -1,4 +1,4 @@
-FROM noire-core
+FROM noir-core
 
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \

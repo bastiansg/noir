@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, PositiveInt, StrictStr
 from pydantic_ai import Tool
 
 
-DEFAULT_LED_MATRIX_OUTPUT_PATH = "/tmp/noire-led-matrix.json"
+DEFAULT_LED_MATRIX_OUTPUT_PATH = "/tmp/noir-led-matrix.json"
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
@@ -77,7 +77,7 @@ async def display_led_matrix_image(
     _validate_pixels(matrix_size=matrix_size, pixels=pixels)
 
     image_path = os.getenv(
-        "NOIRE_LED_MATRIX_OUTPUT_PATH",
+        "NOIR_LED_MATRIX_OUTPUT_PATH",
         DEFAULT_LED_MATRIX_OUTPUT_PATH,
     )
 

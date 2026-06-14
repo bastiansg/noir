@@ -7,7 +7,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 
-from noire.multi_agent import get_multi_agent, get_multi_agent_context
+from noir.multi_agent import get_multi_agent, get_multi_agent_context
 
 
 EXIT_COMMANDS = {"exit", "quit", "q"}
@@ -44,7 +44,7 @@ async def run_chat() -> None:
         if not message:
             continue
 
-        with console.status("[cyan]NOIRE is thinking...[/cyan]"):
+        with console.status("[cyan]NOIR is thinking...[/cyan]"):
             state = await multi_agent.run(
                 input_state={
                     "message": message,
@@ -57,7 +57,7 @@ async def run_chat() -> None:
         console.print(
             Panel(
                 state.answer,
-                title="NOIRE",
+                title="NOIR",
                 border_style="magenta",
             )
         )

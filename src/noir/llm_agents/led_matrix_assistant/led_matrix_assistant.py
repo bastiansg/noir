@@ -4,7 +4,7 @@ from llm_agents.meta.interfaces import LLMAgent
 from pydantic import BaseModel, Field, PositiveInt, StrictStr
 from pydantic_ai import Agent, RunContext, ToolOutput
 
-from noire.llm_agents.tools import display_led_matrix_image_tool
+from noir.llm_agents.tools import display_led_matrix_image_tool
 
 
 class LedMatrixAssistantDeps(BaseModel):

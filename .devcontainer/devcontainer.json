@@ -1,8 +1,8 @@
 {
-    "name": "noire",
+    "name": "noir",
     "initializeCommand": "make core-build",
     "dockerComposeFile": "docker-compose.yml",
-    "service": "noire-devcontainer",
+    "service": "noir-devcontainer",
     "workspaceFolder": "/workspace",
     "customizations": {
         "vscode": {

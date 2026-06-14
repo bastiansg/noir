@@ -1,7 +1,7 @@
 services:
-    noire-core:
-        image: noire-core
-        container_name: noire-core
+    noir-core:
+        image: noir-core
+        container_name: noir-core
         build:
             context: .
             dockerfile: ./docker/core/Dockerfile
@@ -10,11 +10,11 @@ services:
         env_file:
             - .env
         networks:
-            - noire
+            - noir
 
-    noire-app:
-        image: noire-app
-        container_name: noire-app
+    noir-app:
+        image: noir-app
+        container_name: noir-app
         build:
             context: .
             dockerfile: ./docker/app/Dockerfile
@@ -24,9 +24,9 @@ services:
             - .env
         restart: unless-stopped
         networks:
-            - noire
+            - noir
 
 networks:
-    noire:
-        name: noire
+    noir:
+        name: noir
         driver: bridge

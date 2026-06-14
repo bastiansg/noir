@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">=3.14"
-name = "noire"
+name = "noir"
 dynamic = ["version", "dependencies"]
 description = "Noise Of Inconsistent Robot"
 readme = "README.md"
@@ -19,7 +19,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["noire*"]
+include = ["noir*"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
@@ -28,4 +28,4 @@ dependencies = { file = ["requirements.txt"] }
 fallback_version = "0.0.0"
 
 [tool.setuptools.package-data]
-"noire" = ["llm_agents/**/*.md"]
+"noir" = ["llm_agents/**/*.md"]

@@ -1,31 +1,31 @@
-.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart test-multi-agent
+.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart noir-chat
 
 
 core-build:
-	docker compose build noire-core
+	docker compose build noir-core
 
 core-run:
-	docker compose run noire-core
+	docker compose run noir-core
 
 
 devcontainer-build: core-build
-	docker compose -f .devcontainer/docker-compose.yml build noire-devcontainer
+	docker compose -f .devcontainer/docker-compose.yml build noir-devcontainer
 
 
 app-build: core-build
-	docker compose build noire-app
+	docker compose build noir-app
 
 app-run: app-build
-	docker compose run --rm noire-app
+	docker compose run --rm noir-app
 
 app-up: app-build
-	docker compose up -d noire-app
+	docker compose up -d noir-app
 
 app-stop:
-	docker stop noire-app
+	docker stop noir-app
 
 app-restart: app-stop app-up
 
 
-test-multi-agent: devcontainer-build
-	docker compose -f .devcontainer/docker-compose.yml run --rm --entrypoint="env PYTHONPATH=/workspace/src python -m noire.scripts.chat" noire-devcontainer
+noir-chat: app-build
+	docker compose run --rm --entrypoint="python -m noir.scripts.chat" noir-app
