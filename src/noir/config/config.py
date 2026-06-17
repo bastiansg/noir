@@ -10,5 +10,9 @@ class Config(BaseSettings):
     pixoo_matrix_size: PositiveInt = 16
     pixoo_max_packet_hex_length: PositiveInt = 1332
 
+    mongodb_dsn: StrictStr = "mongodb://localhost:27017"
+    mongodb_db_name: StrictStr = "noir"
+    mongodb_collection: StrictStr = "message_history"
+
 
 config = Config()

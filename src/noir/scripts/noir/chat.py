@@ -1,11 +1,14 @@
 import uuid
+import logfire
 import asyncio
 
+from time import sleep
+
+from rich.text import Text
 from rich.align import Align
-from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.text import Text
+from rich.console import Console
 
 from noir.multi_agent import get_multi_agent, get_multi_agent_context
 
@@ -14,6 +17,11 @@ EXIT_COMMANDS = {"exit", "quit", "q"}
 
 
 console = Console()
+
+
+logfire.configure(service_name="noir")
+_ = logfire.instrument_pydantic_ai()
+sleep(1)
 
 
 def render_header() -> None:
@@ -54,6 +62,7 @@ async def run_chat() -> None:
                 thread_id=uuid.uuid4().hex,
             )
 
+        assert state is not None
         console.print(
             Panel(
                 state.explanation,

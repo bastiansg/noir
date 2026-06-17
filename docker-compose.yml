@@ -27,6 +27,23 @@ services:
         network_mode: host
         restart: unless-stopped
 
+    noir-mongo:
+        image: mongo:8.0.16
+        container_name: noir-mongo
+        ports:
+            - "27017:27017"
+        command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+        volumes:
+            - $PWD/resources/db/mongo/db:/data/db:z
+        deploy:
+            resources:
+                limits:
+                    cpus: "1"
+                    memory: 320M
+        restart: unless-stopped
+        networks:
+            - noir
+
 networks:
     noir:
         name: noir

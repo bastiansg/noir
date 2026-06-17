@@ -88,8 +88,19 @@ class PixooDisplay:
             raise RuntimeError("Pixoo serial connection is not open.")
 
         for packet in packets:
-            self._serial.write(packet)
-            self._serial.flush()
+            try:
+                self._write_packet(packet)
+            except serial.SerialException:
+                self.close()
+                self.connect()
+                self._write_packet(packet)
+
+    def _write_packet(self, packet: bytes) -> None:
+        if self._serial is None:
+            raise RuntimeError("Pixoo serial connection is not open.")
+
+        self._serial.write(packet)
+        self._serial.flush()
 
     def close(self) -> None:
         if self._serial is None:
