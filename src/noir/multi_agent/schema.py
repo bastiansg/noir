@@ -1,15 +1,25 @@
-from pydantic import BaseModel, ConfigDict, PositiveInt, StrictStr
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    StrictInt,
+    StrictStr,
+)
 
-from noir.config import config
+from noir.display.led_matrix import LedMatrixImage, LedMatrixVelocity
 
 
 class ContextSchema(BaseModel):
-    matrix_size: PositiveInt
+    pass
 
 
 class StateSchema(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     message: StrictStr
-    matrix_size: PositiveInt = config.pixoo_matrix_size
+    relevant_memories: StrictStr = ""
     explanation: StrictStr | None = None
+    images: list[LedMatrixImage] = []
+    images_ascii: StrictStr = ""
+    brightness: StrictInt | None = None
+    velocity: LedMatrixVelocity | None = None
+    repetitions: StrictInt | None = None

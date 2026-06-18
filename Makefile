@@ -1,4 +1,4 @@
-.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart mongo-start mongo-stop mongo-restart noir-chat pixoo-space-invaders
+.PHONY: core-build core-run devcontainer-build app-build app-run app-up app-stop app-restart mongo-start mongo-stop mongo-restart qdrant-start qdrant-stop qdrant-restart noir-chat pixoo-space-invaders
 
 
 core-build:
@@ -34,6 +34,15 @@ mongo-stop:
 	docker compose stop noir-mongo
 
 mongo-restart: mongo-stop mongo-start
+
+
+qdrant-start:
+	docker compose up -d noir-qdrant
+
+qdrant-stop:
+	docker compose stop noir-qdrant
+
+qdrant-restart: qdrant-stop qdrant-start
 
 
 pixoo-display: app-build

@@ -2,13 +2,14 @@ from langgraph.graph import END, START
 from multi_agents.graph import SimpleEdge
 from multi_agents.graph import MultiAgentGraph
 
-from .nodes import noir
+from .nodes import display_images, noir
 from .schema import ContextSchema, StateSchema
 
 
 def get_multi_agent() -> MultiAgentGraph:
     nodes = [
         noir,
+        display_images,
     ]
 
     edges = [
@@ -18,6 +19,10 @@ def get_multi_agent() -> MultiAgentGraph:
         ),
         SimpleEdge(
             source="noir",
+            target="display_images",
+        ),
+        SimpleEdge(
+            source="display_images",
             target=END,
         ),
     ]

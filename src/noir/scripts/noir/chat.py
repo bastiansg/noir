@@ -1,3 +1,4 @@
+import json
 import uuid
 import logfire
 import asyncio
@@ -9,11 +10,24 @@ from rich.align import Align
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.console import Console
+from rich.pretty import pprint
 
+from noir.config import config
+from noir.memory import get_memory
 from noir.multi_agent import get_multi_agent, get_multi_agent_context
 
 
 EXIT_COMMANDS = {"exit", "quit", "q"}
+MEMORY_PROMPT = """
+Extract only durable, actionable memories that improve N.O.I.R.'s abstract LED-matrix
+communication with this user. Store confirmed preferences, interpretations, successes,
+or misunderstandings involving visual patterns, colors, motion, timing, brightness,
+repetition, and communication behavior. State what should be promoted, adjusted, or
+avoided and why. Do not treat N.O.I.R.'s private explanation as understood unless the
+user confirms it. Exclude transient details and unsupported interpretations. Preserve
+the rule that images cannot contain text, letters, numbers, emoji, icons, known
+symbols, or real writing systems.
+""".strip()
 
 
 console = Console()
@@ -36,12 +50,27 @@ def render_header() -> None:
     )
 
 
+def format_relevant_memory(result: dict) -> str:
+    metadata = result.get("metadata")
+    if metadata is None:
+        return f"- {result['memory']}"
+
+    return (
+        f"- {result['memory']}\n"
+        f"  Source: {json.dumps(metadata, separators=(',', ':'))}"
+    )
+
+
 async def run_chat() -> None:
     multi_agent = get_multi_agent()
     context = get_multi_agent_context()
 
     render_header()
     console.print("[dim]Type 'exit', 'quit', or 'q' to leave.[/dim]\n")
+
+    state = None
+    session_id = config.session_id
+    memory = get_memory()
 
     while True:
         message = Prompt.ask("[bold cyan]you[/bold cyan]").strip()
@@ -52,22 +81,88 @@ async def run_chat() -> None:
         if not message:
             continue
 
+        if state is not None:
+            console.log("creating memories...")
+            await asyncio.to_thread(
+                memory.add,
+                [
+                    {
+                        "role": "assistant",
+                        "content": state.model_dump_json(
+                            include={
+                                "explanation",
+                                "images_ascii",
+                                "brightness",
+                                "velocity",
+                                "repetitions",
+                            },
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": message,
+                    },
+                ],
+                user_id=session_id,
+                prompt=MEMORY_PROMPT,
+                metadata={
+                    "explanation": state.explanation,
+                    "images_ascii": state.images_ascii,
+                    "brightness": state.brightness,
+                    "velocity": state.velocity,
+                    "repetitions": state.repetitions,
+                },
+            )
+
         with console.status("[cyan]NOIR is thinking...[/cyan]"):
+            memory_results = await asyncio.to_thread(
+                memory.search,
+                query=message,
+                filters={"user_id": session_id},
+                top_k=5,
+                threshold=0.3,
+            )
+
+            relevant_memories = "\n".join(
+                format_relevant_memory(result)
+                for result in memory_results["results"]
+            )
+
             state = await multi_agent.run(
                 input_state={
                     "message": message,
-                    "matrix_size": context.matrix_size,
+                    "relevant_memories": relevant_memories,
                 },
                 context=context,
                 thread_id=uuid.uuid4().hex,
             )
 
         assert state is not None
+        pprint(
+            state.model_dump(
+                include={
+                    "message",
+                    "relevant_memories",
+                    "brightness",
+                    "velocity",
+                    "repetitions",
+                }
+            )
+        )
+
         console.print(
-            Panel(
-                state.explanation,
-                title="NOIR",
-                border_style="magenta",
+            Align.left(
+                Panel.fit(
+                    Text(
+                        state.images_ascii,
+                        style="bold bright_cyan",
+                        overflow="ignore",
+                        no_wrap=True,
+                    ),
+                    title="[bold]LED Matrix[/bold]",
+                    border_style="cyan",
+                    padding=(1, 2),
+                )
             )
         )
 

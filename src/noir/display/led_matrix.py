@@ -3,14 +3,14 @@ import time
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic_ai import Tool
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from noir.config import config
-from noir.display.pixoo import RGB, RGBMatrix, PixooDisplay
+from noir.display.pixoo import RGB, PixooDisplay, RGBMatrix
 
 
 LedMatrixColor = Literal["white", "cyan", "yellow", "magenta", "red"]
+LedMatrixVelocity = Literal["slow", "medium", "fast"]
 LedMatrixPixel = Annotated[int, Field(ge=0, le=1)]
 
 BACKGROUND_COLOR = RGB(red=0, green=0, blue=0)
@@ -20,6 +20,11 @@ LED_MATRIX_COLORS: dict[LedMatrixColor, RGB] = {
     "yellow": RGB(red=255, green=255, blue=0),
     "magenta": RGB(red=255, green=0, blue=255),
     "red": RGB(red=255, green=0, blue=0),
+}
+LED_MATRIX_SLEEP_SECONDS: dict[LedMatrixVelocity, float] = {
+    "slow": 0.8,
+    "medium": 0.5,
+    "fast": 0.2,
 }
 
 
@@ -75,9 +80,9 @@ async def display_led_matrix_image(
         list[LedMatrixImage],
         Field(
             min_length=2,
-            max_length=5,
+            max_length=10,
             description=(
-                "Sequence of 2 to 5 LED matrix images to display as the complete public "
+                "Sequence of 2 to 10 LED matrix images to display as the complete public "
                 "response. Keep each frame simple enough to work on the configured square "
                 "LED matrix."
             ),
@@ -94,15 +99,12 @@ async def display_led_matrix_image(
             ),
         ),
     ],
-    sleep_seconds: Annotated[
-        float,
+    velocity: Annotated[
+        LedMatrixVelocity,
         Field(
-            ge=0.1,
-            le=1.0,
             description=(
-                "Required seconds to wait between images. Use slower timing for calm or "
-                "reassurance, faster timing for excitement or urgency, and moderate "
-                "timing for doubt, hesitation, or confusion."
+                "Animation velocity. Use slow for calm or reassurance, fast for "
+                "excitement or urgency, and medium for doubt, hesitation, or confusion."
             ),
         ),
     ],
@@ -122,17 +124,18 @@ async def display_led_matrix_image(
     """Display an abstract animated response on the LED matrix.
 
     Args:
-        images: Sequence of 2 to 5 abstract LED matrix images.
+        images: Sequence of 2 to 10 abstract LED matrix images.
         brightness: Display brightness from 25 to 100.
-        sleep_seconds: Required seconds to wait between images.
+        velocity: Animation velocity: slow, medium, or fast.
         repetitions: Required number of times to loop the full image sequence.
     """
 
     display = get_display()
+    display.set_brightness(brightness)
+    sleep_seconds = LED_MATRIX_SLEEP_SECONDS[velocity]
     for _ in range(repetitions):
         for image in images:
             display.send_rgb_matrix(_to_rgb_matrix(image))
-            display.set_brightness(brightness)
             time.sleep(sleep_seconds)
 
     display.send_rgb_matrix(_black_rgb_matrix())
@@ -156,15 +159,3 @@ def _black_rgb_matrix() -> RGBMatrix:
             for _ in range(config.pixoo_matrix_size)
         ]
     )
-
-
-display_led_matrix_image_tool = Tool(
-    function=display_led_matrix_image,
-    description=(
-        "Display the assistant's complete public response as 2 to 5 colored abstract "
-        "images on the square LED matrix. The display should communicate through "
-        "symbolic pixel language, motion, rhythm, color, and shape rather than text."
-    ),
-    docstring_format="google",
-    require_parameter_descriptions=True,
-)
