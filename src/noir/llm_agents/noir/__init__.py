@@ -1,4 +1,4 @@
-from .noir.noir import (  # noqa
+from .noir import (  # noqa
     Noir,
     NoirDeps,
     NoirOutput,

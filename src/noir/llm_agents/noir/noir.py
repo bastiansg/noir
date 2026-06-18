@@ -13,7 +13,7 @@ from pydantic_ai import Agent, ToolOutput, RunContext
 from noir.display.led_matrix import LedMatrixImage, LedMatrixVelocity
 
 
-class LedMatrixAssistantDeps(BaseModel):
+class NoirDeps(BaseModel):
     matrix_size: PositiveInt = Field(
         description="Width and height of the square LED matrix.",
     )
@@ -23,7 +23,7 @@ class LedMatrixAssistantDeps(BaseModel):
     )
 
 
-class LedMatrixAssistantOutput(BaseModel):
+class NoirOutput(BaseModel):
     explanation: StrictStr = Field(
         description=(
             "Explanation of what the LED matrix image was intended to communicate."
@@ -46,7 +46,7 @@ class LedMatrixAssistantOutput(BaseModel):
     )
 
     velocity: LedMatrixVelocity = Field(
-        description="Animation velocity: slow, medium, or fast.",
+        description="Animation velocity: super-fast, fast, medium, or slow.",
     )
 
     repetitions: StrictInt = Field(
@@ -57,24 +57,22 @@ class LedMatrixAssistantOutput(BaseModel):
 
 
 agent = Agent(  # type: ignore
-    name="led-matrix-assistant",
+    name="noir",
     model="gpt-5.4-2026-03-05",
-    deps_type=LedMatrixAssistantDeps,
-    output_type=ToolOutput(LedMatrixAssistantOutput),
+    deps_type=NoirDeps,
+    output_type=ToolOutput(NoirOutput),
     retries=3,
 )
 
 
 @agent.system_prompt
-async def get_system_prompt(ctx: RunContext[LedMatrixAssistantDeps]) -> str:
+async def get_system_prompt(ctx: RunContext[NoirDeps]) -> str:
     return LLMAgent.read_file(
         file_path=str(Path(__file__).with_name("system-prompt.md"))
     ).format(**ctx.deps.model_dump())
 
 
-class LedMatrixAssistant(
-    LLMAgent[LedMatrixAssistantDeps, LedMatrixAssistantOutput]
-):
+class Noir(LLMAgent[NoirDeps, NoirOutput]):
     def __init__(
         self,
         max_concurrency: int = 10,

@@ -5,8 +5,8 @@ from rich.console import Console
 
 from noir.config import config
 from noir.display.ascii_art import matrix_to_ascii_art
+from noir.llm_agents import Noir, NoirDeps
 from noir.multi_agent.schema import StateSchema
-from noir.llm_agents import LedMatrixAssistant, LedMatrixAssistantDeps
 
 
 console = Console()
@@ -15,10 +15,10 @@ console = Console()
 async def run(state: StateSchema) -> dict[str, Any]:
     console.log("running noir...")
 
-    noir = LedMatrixAssistant()
-    noir_output = await noir.generate(
+    noir_agent = Noir()
+    noir_output = await noir_agent.generate(
         user_prompt=f"Message: {state.message}",
-        agent_deps=LedMatrixAssistantDeps(
+        agent_deps=NoirDeps(
             matrix_size=config.pixoo_matrix_size,
             relevant_memories=state.relevant_memories,
         ),

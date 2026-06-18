@@ -10,7 +10,7 @@ from noir.display.pixoo import RGB, PixooDisplay, RGBMatrix
 
 
 LedMatrixColor = Literal["white", "cyan", "yellow", "magenta", "red"]
-LedMatrixVelocity = Literal["slow", "medium", "fast"]
+LedMatrixVelocity = Literal["super-fast", "fast", "medium", "slow"]
 LedMatrixPixel = Annotated[int, Field(ge=0, le=1)]
 
 BACKGROUND_COLOR = RGB(red=0, green=0, blue=0)
@@ -22,9 +22,10 @@ LED_MATRIX_COLORS: dict[LedMatrixColor, RGB] = {
     "red": RGB(red=255, green=0, blue=0),
 }
 LED_MATRIX_SLEEP_SECONDS: dict[LedMatrixVelocity, float] = {
-    "slow": 0.8,
-    "medium": 0.5,
-    "fast": 0.2,
+    "super-fast": 0.25,
+    "fast": 0.5,
+    "medium": 0.75,
+    "slow": 1.0,
 }
 
 
@@ -103,8 +104,7 @@ async def display_led_matrix_image(
         LedMatrixVelocity,
         Field(
             description=(
-                "Animation velocity. Use slow for calm or reassurance, fast for "
-                "excitement or urgency, and medium for doubt, hesitation, or confusion."
+                "Animation velocity: super-fast, fast, medium, or slow."
             ),
         ),
     ],
@@ -126,7 +126,7 @@ async def display_led_matrix_image(
     Args:
         images: Sequence of 2 to 10 abstract LED matrix images.
         brightness: Display brightness from 25 to 100.
-        velocity: Animation velocity: slow, medium, or fast.
+        velocity: Animation velocity category.
         repetitions: Required number of times to loop the full image sequence.
     """
 
